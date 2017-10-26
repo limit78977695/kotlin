@@ -112,12 +112,15 @@ public class LazyClassDescriptor extends ClassDescriptorBase implements ClassDes
 
     private final NotNullLazyValue<Collection<ClassDescriptor>> sealedSubclasses;
 
+    private final boolean shouldSeeNestedsFromCompanionHierarchy;
+
     public LazyClassDescriptor(
             @NotNull LazyClassContext c,
             @NotNull DeclarationDescriptor containingDeclaration,
             @NotNull Name name,
             @NotNull KtClassLikeInfo classLikeInfo,
-            boolean isExternal
+            boolean isExternal,
+            boolean shouldSeeNestedsFromCompanionHierarchy
     ) {
         super(c.getStorageManager(), containingDeclaration, name,
               KotlinSourceElementKt.toSourceElement(classLikeInfo.getCorrespondingClassOrObject()),
@@ -222,15 +225,15 @@ public class LazyClassDescriptor extends ClassDescriptorBase implements ClassDes
         }
 
         this.companionObjectDescriptor = storageManager.createNullableLazyValue(
-                () -> computeCompanionObjectDescriptor(getCompanionObjectIfAllowed())
+                () -> computeCompanionObjectDescriptor(getCompanionObjectIfAllowed(), shouldSeeNestedsFromCompanionHierarchy)
         );
-        this.extraCompanionObjectDescriptors = storageManager.createMemoizedFunction(this::computeCompanionObjectDescriptor);
+        this.extraCompanionObjectDescriptors = storageManager.createMemoizedFunction((v) -> computeCompanionObjectDescriptor(v, shouldSeeNestedsFromCompanionHierarchy));
         this.forceResolveAllContents = storageManager.createRecursionTolerantNullableLazyValue(() -> {
             doForceResolveAllContents();
             return null;
         }, null);
 
-        this.resolutionScopesSupport = new ClassResolutionScopesSupport(this, storageManager, this::getOuterScope);
+        this.resolutionScopesSupport = new ClassResolutionScopesSupport(this, storageManager, shouldSeeNestedsFromCompanionHierarchy, this::getOuterScope);
 
         this.parameters = c.getStorageManager().createLazyValue(() -> {
             KtClassLikeInfo classInfo = declarationProvider.getOwnerInfo();
@@ -264,6 +267,8 @@ public class LazyClassDescriptor extends ClassDescriptorBase implements ClassDes
 
         // TODO: only consider classes from the same file, not the whole package fragment
         this.sealedSubclasses = storageManager.createLazyValue(() -> DescriptorUtilsKt.computeSealedSubclasses(this));
+
+        this.shouldSeeNestedsFromCompanionHierarchy = shouldSeeNestedsFromCompanionHierarchy;
     }
 
     private static boolean isIllegalInner(@NotNull DeclarationDescriptor descriptor) {
@@ -310,7 +315,7 @@ public class LazyClassDescriptor extends ClassDescriptorBase implements ClassDes
             @NotNull LazyClassContext c,
             @NotNull ClassMemberDeclarationProvider declarationProvider
     ) {
-        return new LazyClassMemberScope(c, declarationProvider, this, c.getTrace());
+        return new LazyClassMemberScope(c, declarationProvider, this, c.getTrace(), shouldSeeNestedsFromCompanionHierarchy);
     }
 
     @NotNull
@@ -414,9 +419,9 @@ public class LazyClassDescriptor extends ClassDescriptorBase implements ClassDes
     }
 
     @Nullable
-    private ClassDescriptorWithResolutionScopes computeCompanionObjectDescriptor(@Nullable KtObjectDeclaration companionObject) {
+    private ClassDescriptorWithResolutionScopes computeCompanionObjectDescriptor(@Nullable KtObjectDeclaration companionObject, boolean shouldSeeNestedsFromCompanionHierarchy) {
         if (companionObject == null)
-            return createSyntheticCompanionObjectDescriptor();
+            return createSyntheticCompanionObjectDescriptor(shouldSeeNestedsFromCompanionHierarchy);
         KtClassLikeInfo companionObjectInfo = getCompanionObjectInfo(companionObject);
         if (!(companionObjectInfo instanceof KtClassOrObjectInfo)) {
             return null;
@@ -434,7 +439,7 @@ public class LazyClassDescriptor extends ClassDescriptorBase implements ClassDes
         }
     }
 
-    private ClassDescriptorWithResolutionScopes createSyntheticCompanionObjectDescriptor() {
+    private ClassDescriptorWithResolutionScopes createSyntheticCompanionObjectDescriptor(boolean shouldSeeNestedsFromCompanionHierarchy) {
         Name syntheticCompanionName = c.getSyntheticResolveExtension().getSyntheticCompanionObjectNameIfNeeded(this);
         if (syntheticCompanionName == null)
             return null;
@@ -442,7 +447,7 @@ public class LazyClassDescriptor extends ClassDescriptorBase implements ClassDes
                 /* parentClassOrObject= */ classOrObject,
                 this, syntheticCompanionName, getSource(),
                 /* outerScope= */ getOuterScope(),
-                Modality.FINAL, PUBLIC, PRIVATE, ClassKind.OBJECT, true);
+                Modality.FINAL, PUBLIC, PRIVATE, ClassKind.OBJECT, true, shouldSeeNestedsFromCompanionHierarchy);
     }
 
     @Nullable

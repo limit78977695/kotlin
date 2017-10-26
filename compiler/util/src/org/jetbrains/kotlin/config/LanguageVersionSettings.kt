@@ -74,6 +74,8 @@ enum class LanguageFeature(
     RestrictionOfWrongAnnotationsWithUseSiteTargetsOnTypes(KOTLIN_1_3),
     ProhibitInnerClassesOfGenericClassExtendingThrowable(KOTLIN_1_3),
 
+    ProhibitVisibilityOfNestedClassifiersFromSupertypesOfCompanion(KOTLIN_1_2),
+
     StrictJavaNullabilityAssertions(sinceVersion = null, defaultState = State.DISABLED),
 
     // Experimental features

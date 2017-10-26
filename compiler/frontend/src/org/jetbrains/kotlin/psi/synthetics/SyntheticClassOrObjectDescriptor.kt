@@ -55,15 +55,16 @@ class SyntheticClassOrObjectDescriptor(
         private val visibility: Visibility,
         constructorVisibility: Visibility,
         private val kind: ClassKind,
-        private val isCompanionObject: Boolean
+        private val isCompanionObject: Boolean,
+        shouldSeeNestedsFromCompanionHierarchy: Boolean
 ) : ClassDescriptorBase(c.storageManager, containingDeclaration, name, source, false), ClassDescriptorWithResolutionScopes {
     val syntheticDeclaration: KtPureClassOrObject = SyntheticDeclaration(parentClassOrObject, name.asString())
 
     private val thisDescriptor: SyntheticClassOrObjectDescriptor get() = this // code readability
     private val typeConstructor = SyntheticTypeConstructor(c.storageManager)
-    private val resolutionScopesSupport = ClassResolutionScopesSupport(thisDescriptor, c.storageManager, { outerScope })
+    private val resolutionScopesSupport = ClassResolutionScopesSupport(thisDescriptor, c.storageManager, shouldSeeNestedsFromCompanionHierarchy, { outerScope })
     private val syntheticSupertypes = mutableListOf<KotlinType>().apply { c.syntheticResolveExtension.addSyntheticSupertypes(thisDescriptor, this) }
-    private val unsubstitutedMemberScope = LazyClassMemberScope(c, SyntheticClassMemberDeclarationProvider(syntheticDeclaration), this, c.trace)
+    private val unsubstitutedMemberScope = LazyClassMemberScope(c, SyntheticClassMemberDeclarationProvider(syntheticDeclaration), this, c.trace, shouldSeeNestedsFromCompanionHierarchy)
     private val unsubstitutedPrimaryConstructor = createUnsubstitutedPrimaryConstructor(constructorVisibility)
 
     override val annotations: Annotations get() = Annotations.EMPTY

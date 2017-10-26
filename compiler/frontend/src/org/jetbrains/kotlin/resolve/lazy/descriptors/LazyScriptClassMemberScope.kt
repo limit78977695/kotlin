@@ -30,8 +30,9 @@ class LazyScriptClassMemberScope(
         resolveSession: ResolveSession,
         declarationProvider: ClassMemberDeclarationProvider,
         private val scriptDescriptor: LazyScriptDescriptor,
-        trace: BindingTrace)
-: LazyClassMemberScope(resolveSession, declarationProvider, scriptDescriptor, trace) {
+        trace: BindingTrace,
+        shouldSeeNestedsFromCompanionHierarchy: Boolean
+) : LazyClassMemberScope(resolveSession, declarationProvider, scriptDescriptor, trace, shouldSeeNestedsFromCompanionHierarchy) {
 
     override fun resolvePrimaryConstructor(): ClassConstructorDescriptor? {
         val constructor = ClassConstructorDescriptorImpl.create(

@@ -38,13 +38,15 @@ class LazyScriptDescriptor(
         resolveSession: ResolveSession,
         containingDeclaration: DeclarationDescriptor,
         name: Name,
-        internal val scriptInfo: KtScriptInfo
+        internal val scriptInfo: KtScriptInfo,
+        private val shouldSeeNestedsFromCompanionHierarchy: Boolean
 ) : ScriptDescriptor, LazyClassDescriptor(
         resolveSession,
         containingDeclaration,
         name,
         scriptInfo,
-        /* isExternal = */ false
+        /* isExternal = */ false,
+        shouldSeeNestedsFromCompanionHierarchy
 ) {
     init {
         resolveSession.trace.record(BindingContext.SCRIPT, scriptInfo.script, this)
@@ -75,7 +77,8 @@ class LazyScriptDescriptor(
                 c as ResolveSession,
                 declarationProvider,
                 this,
-                c.trace
+                c.trace,
+                shouldSeeNestedsFromCompanionHierarchy
         )
 
     override fun getUnsubstitutedPrimaryConstructor() = super.getUnsubstitutedPrimaryConstructor()!!

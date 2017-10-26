@@ -18,6 +18,7 @@ package org.jetbrains.kotlin.types.expressions
 
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
+import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.config.TargetPlatformVersion
 import org.jetbrains.kotlin.container.get
@@ -170,7 +171,8 @@ class LocalClassDescriptorHolder(
                     containingDeclaration,
                     classOrObject.nameAsSafeName,
                     KtClassInfoUtil.createClassLikeInfo(classOrObject),
-                    classOrObject.hasModifier(KtTokens.EXTERNAL_KEYWORD)
+                    classOrObject.hasModifier(KtTokens.EXTERNAL_KEYWORD),
+                    !languageVersionSettings.supportsFeature(LanguageFeature.ProhibitVisibilityOfNestedClassifiersFromSupertypesOfCompanion)
             )
             writableScope?.addClassifierDescriptor(classDescriptor!!)
         }

@@ -30,6 +30,7 @@ import java.util.*
 class ClassResolutionScopesSupport(
         private val classDescriptor: ClassDescriptor,
         storageManager: StorageManager,
+        private val shouldSeeNestedsFromCompanionHierarchy: Boolean,
         private val getOuterScope: () -> LexicalScope
 ) {
     private fun scopeWithGenerics(parent: LexicalScope): LexicalScopeImpl {
@@ -91,15 +92,21 @@ class ClassResolutionScopesSupport(
 
         val parentForNewScope: LexicalScope
 
-        if (withCompanionObject) {
-            staticScopes.addIfNotNull(classDescriptor.companionObjectDescriptor?.unsubstitutedInnerClassesScope)
-            implicitReceiver = classDescriptor.companionObjectDescriptor?.thisAsReceiverParameter
+        val companionObjectDescriptor = classDescriptor.companionObjectDescriptor
 
-            parentForNewScope = classDescriptor.companionObjectDescriptor?.let {
-                it.getAllSuperclassesWithoutAny().asReversed().fold(parent) { scope, currentClass ->
-                    createInheritanceScope(parent = scope, ownerDescriptor = ownerDescriptor, classDescriptor = currentClass, withCompanionObject = false)
+        if (withCompanionObject && companionObjectDescriptor != null) {
+            if (shouldSeeNestedsFromCompanionHierarchy || classDescriptor == this.classDescriptor) staticScopes.add(companionObjectDescriptor.unsubstitutedInnerClassesScope)
+            implicitReceiver = companionObjectDescriptor.thisAsReceiverParameter
+
+            parentForNewScope = if (shouldSeeNestedsFromCompanionHierarchy) {
+                companionObjectDescriptor.let {
+                    it.getAllSuperclassesWithoutAny().asReversed().fold(parent) { scope, currentClass ->
+                        createInheritanceScope(parent = scope, ownerDescriptor = ownerDescriptor, classDescriptor = currentClass, withCompanionObject = false)
+                    }
                 }
-            } ?: parent
+            } else {
+                parent
+            }
         }
         else {
             implicitReceiver = null

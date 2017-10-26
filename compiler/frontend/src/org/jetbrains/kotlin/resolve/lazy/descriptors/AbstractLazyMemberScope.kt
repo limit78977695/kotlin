@@ -41,7 +41,8 @@ protected constructor(
         protected val c: LazyClassContext,
         protected val declarationProvider: DP,
         protected val thisDescriptor: D,
-        protected val trace: BindingTrace
+        protected val trace: BindingTrace,
+        private val shouldSeeNestedsFromCompanionHierarchy: Boolean
 ) : MemberScopeImpl() {
 
     protected val storageManager: StorageManager = c.storageManager
@@ -54,10 +55,10 @@ protected constructor(
         val result = Sets.newLinkedHashSet<ClassDescriptor>()
         declarationProvider.getClassOrObjectDeclarations(name).mapTo(result) {
             if (it is KtScriptInfo)
-                LazyScriptDescriptor(c as ResolveSession, thisDescriptor, name, it)
+                LazyScriptDescriptor(c as ResolveSession, thisDescriptor, name, it, shouldSeeNestedsFromCompanionHierarchy)
             else {
                 val isExternal = it.modifierList?.hasModifier(KtTokens.EXTERNAL_KEYWORD) ?: false
-                LazyClassDescriptor(c, thisDescriptor, name, it, isExternal)
+                LazyClassDescriptor(c, thisDescriptor, name, it, isExternal, shouldSeeNestedsFromCompanionHierarchy)
             }
         }
         getNonDeclaredClasses(name, result)
