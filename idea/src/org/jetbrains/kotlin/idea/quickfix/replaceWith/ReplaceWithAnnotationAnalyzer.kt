@@ -167,7 +167,8 @@ object ReplaceWithAnnotationAnalyzer {
 
             is ClassDescriptor -> {
                 val outerScope = getResolutionScope(descriptor.containingDeclaration, ownerDescriptor, additionalScopes) ?: return null
-                ClassResolutionScopesSupport(descriptor, LockBasedStorageManager.NO_LOCKS, { outerScope }).scopeForMemberDeclarationResolution()
+                // TODO: wire shouldSeeNesteds flag here properly
+                ClassResolutionScopesSupport(descriptor, LockBasedStorageManager.NO_LOCKS, true, { outerScope }).scopeForMemberDeclarationResolution()
             }
 
             is TypeAliasDescriptor -> {

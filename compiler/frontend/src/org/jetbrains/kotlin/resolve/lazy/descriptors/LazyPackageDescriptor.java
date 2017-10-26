@@ -36,12 +36,13 @@ public class LazyPackageDescriptor extends PackageFragmentDescriptorImpl impleme
             @NotNull ModuleDescriptor module,
             @NotNull FqName fqName,
             @NotNull ResolveSession resolveSession,
-            @NotNull PackageMemberDeclarationProvider declarationProvider
+            @NotNull PackageMemberDeclarationProvider declarationProvider,
+            boolean shouldSeeNestedsFromCompanionHierarchy
     ) {
         super(module, fqName);
         this.declarationProvider = declarationProvider;
 
-        this.memberScope = new LazyPackageMemberScope(resolveSession, declarationProvider, this);
+        this.memberScope = new LazyPackageMemberScope(resolveSession, declarationProvider, this, shouldSeeNestedsFromCompanionHierarchy);
 
         for (KtFile file : declarationProvider.getPackageFiles()) {
             resolveSession.getTrace().record(BindingContext.FILE_TO_PACKAGE_FRAGMENT, file, this);

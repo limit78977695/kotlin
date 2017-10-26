@@ -48,8 +48,9 @@ open class LazyClassMemberScope(
         c: LazyClassContext,
         declarationProvider: ClassMemberDeclarationProvider,
         thisClass: ClassDescriptorWithResolutionScopes,
-        trace: BindingTrace
-) : AbstractLazyMemberScope<ClassDescriptorWithResolutionScopes, ClassMemberDeclarationProvider>(c, declarationProvider, thisClass, trace) {
+        trace: BindingTrace,
+        shouldSeeNestedsFromCompanionHierarchy: Boolean
+) : AbstractLazyMemberScope<ClassDescriptorWithResolutionScopes, ClassMemberDeclarationProvider>(c, declarationProvider, thisClass, trace, shouldSeeNestedsFromCompanionHierarchy) {
 
     private val descriptorsFromDeclaredElements = storageManager.createLazyValue {
         computeDescriptorsFromDeclaredElements(DescriptorKindFilter.ALL, MemberScope.ALL_NAME_FILTER, NoLookupLocation.WHEN_GET_ALL_DESCRIPTORS)

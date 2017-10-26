@@ -23,6 +23,7 @@ import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.ReadOnly;
+import org.jetbrains.kotlin.config.LanguageFeature;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
 import org.jetbrains.kotlin.context.GlobalContext;
 import org.jetbrains.kotlin.descriptors.*;
@@ -237,7 +238,10 @@ public class ResolveSession implements KotlinCodeAnalyzer, LazyClassContext {
         if (provider == null) {
             return null;
         }
-        return new LazyPackageDescriptor(module, fqName, this, provider);
+        return new LazyPackageDescriptor(
+                module, fqName, this, provider,
+                !languageVersionSettings.supportsFeature(LanguageFeature.ProhibitVisibilityOfNestedClassifiersFromSupertypesOfCompanion)
+        );
     }
 
     @NotNull
