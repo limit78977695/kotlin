@@ -5,8 +5,8 @@
 // CHECK_IF_COUNT: function=shortFoo count=0
 // CHECK_CASES_COUNT: function=byteFoo count=3
 // CHECK_IF_COUNT: function=byteFoo count=0
-// CHECK_CASES_COUNT: function=charFoo count=0
-// CHECK_IF_COUNT: function=charFoo count=3
+// CHECK_CASES_COUNT: function=charFoo count=3
+// CHECK_IF_COUNT: function=charFoo count=0
 
 fun intFoo(x: Int): Int {
     return when (x) {
