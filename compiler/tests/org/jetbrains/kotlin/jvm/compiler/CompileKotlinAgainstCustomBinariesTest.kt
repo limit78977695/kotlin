@@ -131,26 +131,27 @@ class CompileKotlinAgainstCustomBinariesTest : AbstractKotlinCompilerIntegration
     ) {
         // Compiles the library with the "pre-release" flag, then compiles a usage of this library in the release mode
 
-        val result = try {
-            System.setProperty(TEST_IS_PRE_RELEASE_SYSTEM_PROPERTY, "true")
+        val result = withPreRelease(true) {
             when (compiler) {
                 is K2JSCompiler -> compileJsLibrary(libraryName)
                 is K2JVMCompiler -> compileLibrary(libraryName)
                 else -> throw UnsupportedOperationException(compiler.toString())
             }
         }
-        finally {
-            System.clearProperty(TEST_IS_PRE_RELEASE_SYSTEM_PROPERTY)
-        }
 
-        try {
-            System.setProperty(TEST_IS_PRE_RELEASE_SYSTEM_PROPERTY, "false")
+        withPreRelease(false) {
             compileKotlin("source.kt", usageDestination, listOf(result), compiler, additionalOptions.toList())
         }
-        finally {
-            System.clearProperty(TEST_IS_PRE_RELEASE_SYSTEM_PROPERTY)
-        }
     }
+
+    private fun <T> withPreRelease(value: Boolean, block: () -> T): T =
+            try {
+                System.setProperty(TEST_IS_PRE_RELEASE_SYSTEM_PROPERTY, value.toString())
+                block()
+            }
+            finally {
+                System.clearProperty(TEST_IS_PRE_RELEASE_SYSTEM_PROPERTY)
+            }
 
     // ------------------------------------------------------------------------------
 
@@ -256,6 +257,13 @@ class CompileKotlinAgainstCustomBinariesTest : AbstractKotlinCompilerIntegration
 
     fun testReleaseCompilerAgainstPreReleaseLibraryJsSkipVersionCheck() {
         doTestPreReleaseKotlinLibrary(K2JSCompiler(), "library", File(tmpdir, "usage.js"), "-Xskip-metadata-version-check")
+    }
+
+    fun testReleaseCompilerAgainstPreReleaseLibraryStableLanguageVersion() {
+        withPreRelease(true) {
+            val library = compileLibrary("library")
+            compileKotlin("source.kt", tmpdir, listOf(library), K2JVMCompiler(), listOf("-language-version", "1.1"))
+        }
     }
 
     fun testWrongMetadataVersion() {
