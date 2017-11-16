@@ -18,6 +18,7 @@ package org.jetbrains.kotlin.resolve.jvm.checkers
 
 import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.config.JvmTarget
+import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.ClassifierDescriptor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
@@ -41,7 +42,13 @@ class InterfaceDefaultMethodCallChecker(val jvmTarget: JvmTarget) : CallChecker 
             isStaticDeclaration(descriptor) &&
             isInterface(descriptor.containingDeclaration) &&
             descriptor is JavaCallableMemberDescriptor) {
-            context.trace.report(ErrorsJvm.INTERFACE_STATIC_METHOD_CALL_FROM_JAVA6_TARGET.on(reportOn))
+            if (context.languageVersionSettings.supportsFeature(LanguageFeature.DefaultMethodsCallFromJava6TargetError)) {
+                context.trace.report(ErrorsJvm.INTERFACE_STATIC_METHOD_CALL_FROM_JAVA6_TARGET_ERROR.on(reportOn))
+            }
+            else {
+                context.trace.report(ErrorsJvm.INTERFACE_STATIC_METHOD_CALL_FROM_JAVA6_TARGET.on(reportOn))
+            }
+
         }
 
         if (getSuperCallExpression(resolvedCall.call) == null) return
@@ -58,7 +65,12 @@ class InterfaceDefaultMethodCallChecker(val jvmTarget: JvmTarget) : CallChecker 
                 context.trace.report(ErrorsJvm.INTERFACE_CANT_CALL_DEFAULT_METHOD_VIA_SUPER.on(reportOn))
             }
             else if (!supportDefaults) {
-                context.trace.report(ErrorsJvm.DEFAULT_METHOD_CALL_FROM_JAVA6_TARGET.on(reportOn))
+                if (context.languageVersionSettings.supportsFeature(LanguageFeature.DefaultMethodsCallFromJava6TargetError)) {
+                    context.trace.report(ErrorsJvm.DEFAULT_METHOD_CALL_FROM_JAVA6_TARGET_ERROR.on(reportOn))
+                }
+                else {
+                    context.trace.report(ErrorsJvm.DEFAULT_METHOD_CALL_FROM_JAVA6_TARGET.on(reportOn))
+                }
             }
         }
     }

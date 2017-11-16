@@ -15,6 +15,7 @@ public interface JavaInterface {
 }
 
 // FILE: 1.kt
+// LANGUAGE_LEVEL: 1.1
 import JavaInterface.testStatic
 
 interface KotlinInterface : JavaInterface {
